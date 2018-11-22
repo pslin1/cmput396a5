@@ -1,6 +1,12 @@
 import numpy as np
+import random
 
-def place_move(x,y, board, letter):
+global boardformat
+boardformat = []
+
+def place_move(x,y, board, letter, appending = None):
+    global boardformat
+    
     #place a move at x,y coordinates
     if x in ["a", "A"]:
         board[y-1][0] = letter
@@ -8,6 +14,8 @@ def place_move(x,y, board, letter):
         board[y-1][1] = letter
     elif x in ["c", "C"]:
         board[y-1][2] = letter
+    if (appending is None):
+        boardformat.append(str(x)+str(y))
 
 def check_if_winner(board, letter):
     #return true if letter wins
@@ -52,19 +60,59 @@ def print_board(board):
     print("1   " + int_to_str(board[0][0]) + "    " + int_to_str(board[0][1]) + "    " + int_to_str(board[0][2]) + "\n")
     print("2   " + int_to_str(board[1][0]) + "    " + int_to_str(board[1][1]) + "    " + int_to_str(board[1][2]) + "\n")
     print("3   " + int_to_str(board[2][0]) + "    " + int_to_str(board[2][1]) + "    " + int_to_str(board[2][2]) + "\n")
+    
+def isValidInput(selected):
+    if (len(selected) == 2):
+        selected = selected.lower()
+        f = selected[0]
+        s = selected[1]
+        if (f == 'a' or f == 'b' or f == 'c'):
+            if (int(s) and int(s) <= 3 and int(s) > 0):
+                return True
+    return False
+
+def isValidMove(selected,board):
+    if (isValidInput(selected) == True):
+        global boardformat
+        if (selected not in boardformat):
+            return True
+    return False    
+    
+def MoveMade(board, letter):
+    #Was gonna make an actual AI moves with negamax
+    rows = ['a','b','c']
+    cols = ['1','2','3']
+    success = False
+    while (success == False):
+        selection = ''
+        a = random.randint(0,2)
+        b = random.randint(0,2)
+        selection = rows[int(a)] + cols[int(b)]
+        if (isValidMove(selection,board) == True):
+            success = True
+            place_move(selection[0], int(selection[1]), board, str_to_int(letter))
+        #Else its not valid so keep running till there's a good stuff
+    
+    #theboard = board_to_str(board)    
+    #if theboard in boardformat:
+        #Already made the thing
+    #else:
+        #Check its stuff
 
 def main():
     #game_stop is true when game is over (someone wins or draw)
     game_stop = False
     #player turn is True when it is the players turn
     player_turn = True
+    
     board = np.zeros((3,3))
-
+    
     player_letter = input("Please enter X or O: ").upper()
-
-    #validate input
+    
+    
+    #validating input
     while player_letter not in ["X","O"]:
-        player_letter = input("Please enter X or O: ")
+        player_letter = input("Please enter X or O: ").upper()
     #computer picks letter that player did not pick
     if player_letter == "X":
         computer_letter = "O"
@@ -78,32 +126,35 @@ def main():
             print_board(board)
 
             #Selection must be letter and number (eg: a3, A3, b1, etc)
+            print('Coordinates must be combinations of letter and numbers; (eg. a3, A3, b1, etc)')
             selection = input("Please enter coordinates: ")
 
             #check if input valid here
+            #newboard = place_move(selection[0], int(selection[1]), board, str_to_int(player_letter))
+            if (isValidMove(selection,board) == False):
+                print("Invalid cmd; Try again\n")
+            else:
+                #place move on board
+                
+                place_move(selection[0], int(selection[1]), board, str_to_int(player_letter))
 
-            #place move on board
-            place_move(selection[0], int(selection[1]), board, str_to_int(player_letter))
+                #check if that move won the game
+                if check_if_winner(board, str_to_int(player_letter)):
+                    print_board(board)
+                    print("Player wins\n")
+                    game_stop = True
+                #check if that move resulted in a draw
+                if check_if_full(board):
+                    print_board(board)
+                    print("Draw\n")
+                    game_stop = True
 
-            #check if that move won the game
-            if check_if_winner(board, str_to_int(player_letter)):
-                print_board(board)
-                print("Player wins")
-                game_stop = True
-            #check if that move resulted in a draw
-            if check_if_full(board):
-                print_board(board)
-                print("Draw")
-                game_stop = True
-
-            #end of player turn
-            player_turn = False
-
-
-        #computers turn
+                #end of player turn
+                player_turn = False
+            #computers turn
         else:
             print("Computers turn\n")
-
+            MoveMade(board, computer_letter)
             """
             Do computer move here
             """
